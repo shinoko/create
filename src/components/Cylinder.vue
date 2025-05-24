@@ -1,5 +1,10 @@
 <template>
-  <div ref="container" class="cylinder-container"></div>
+  <div class="container">
+    <div ref="container" class="cylinder-container"></div>
+    <button class="control-btn" @click="toggleRotation">
+      {{ isRotating ? '停止旋转' : '开始旋转' }}
+    </button>
+  </div>
 </template>
 
 <script setup>
@@ -8,7 +13,13 @@ import * as THREE from 'three'
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls'
 
 const container = ref(null)
+const isRotating = ref(false)
 let scene, camera, renderer, cylinder, controls
+
+const toggleRotation = () => {
+  isRotating.value = !isRotating.value
+  controls.autoRotate = isRotating.value
+}
 
 const init = () => {
   // 创建场景
@@ -126,11 +137,15 @@ const init = () => {
   controls.dampingFactor = 0.05
   controls.enableRotate = true   // 启用旋转
   controls.enablePan = false     // 保持禁用平移
-  controls.enableZoom = false    // 保持禁用缩放
-  controls.autoRotate = false    // 保持禁用自动旋转
+  controls.enableZoom = true     // 启用缩放
+  controls.autoRotate = false    // 初始状态不自动旋转
+  controls.autoRotateSpeed = 2.0 // 设置自动旋转速度
   controls.target.set(0, 0, 0)   // 设置旋转中心点为圆柱体中心
   controls.minPolarAngle = 0     // 限制垂直旋转角度
   controls.maxPolarAngle = Math.PI // 限制垂直旋转角度
+  controls.minDistance = 400     // 设置最小缩放距离
+  controls.maxDistance = 2000    // 设置最大缩放距离
+  controls.zoomSpeed = 1.0       // 设置缩放速度
   
   // 开始动画循环
   animate()
@@ -162,9 +177,38 @@ onBeforeUnmount(() => {
 </script>
 
 <style scoped>
-.cylinder-container {
+.container {
+  position: relative;
   width: 100%;
   height: 100vh;
+}
+
+.cylinder-container {
+  width: 100%;
+  height: 100%;
   overflow: hidden;
+}
+
+.control-btn {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  padding: 10px 20px;
+  font-size: 16px;
+  background-color: #4CAF50;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+  z-index: 1000;
+}
+
+.control-btn:hover {
+  background-color: #45a049;
+}
+
+.control-btn:active {
+  background-color: #3d8b40;
 }
 </style> 

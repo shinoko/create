@@ -34,7 +34,7 @@ const createTextTexture = (row, col) => {
   context.textBaseline = 'middle'
   
   // 绘制文字，根据行列位置显示不同内容，并调整位置到网格中间
-  const text = `测试${row}-${col}`
+  const text = `姓名${row}-${col}`
 //   const textWidth = context.measureText(text).width
 //   const padding = 20 // 文字边距
   
@@ -156,7 +156,8 @@ const init = () => {
       const gridMesh = new THREE.Mesh(gridGeometry, gridMaterial.clone())
       
       // 计算网格位置，稍微调整以避免与分割线重叠
-      const angle = (col * Math.PI * 2) / 36
+    //   const angle = (col * Math.PI * 2) / 36
+      const angle = ((col + (col+1))* Math.PI ) / 36
       const x = radius * Math.cos(angle)
       const z = radius * Math.sin(angle)
       const y = -height/2 + gridHeight/2 + row * gridHeight

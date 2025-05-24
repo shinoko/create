@@ -33,7 +33,7 @@ const init = () => {
   // 创建圆柱体
   const radius = 600
   const height = 500
-  const geometry = new THREE.CylinderGeometry(radius, radius, height, 36, 5, true) // 36列，5行
+  const geometry = new THREE.CylinderGeometry(radius, radius, height, 36, 5, true)
   const material = new THREE.MeshPhongMaterial({
     color: 0xffff00,
     specular: 0x111111,
@@ -43,13 +43,42 @@ const init = () => {
   cylinder = new THREE.Mesh(geometry, material)
   cylinder.position.set(0, 0, 0)
 
-  // 创建网格线
-  const wireframe = new THREE.LineSegments(
-    new THREE.WireframeGeometry(geometry),
-    new THREE.LineBasicMaterial({ color: 0x000000, linewidth: 1 })
-  )
-  cylinder.add(wireframe) // 将网格线添加到圆柱体上
+  // 创建自定义网格线
+  const gridLines = new THREE.Group()
   
+  // 创建水平线
+  for (let i = 0; i <= 5; i++) {
+    const y = (i * height / 5) - height / 2
+    const circleGeometry = new THREE.CircleGeometry(radius, 36)
+    const circleEdges = new THREE.EdgesGeometry(circleGeometry)
+    const circleLine = new THREE.LineSegments(
+      circleEdges,
+      new THREE.LineBasicMaterial({ color: 0x000000 })
+    )
+    circleLine.rotation.x = Math.PI / 2
+    circleLine.position.y = y
+    gridLines.add(circleLine)
+  }
+  
+  // 创建垂直线
+  for (let i = 0; i < 36; i++) {
+    const angle = (i * Math.PI * 2) / 36
+    const x = radius * Math.cos(angle)
+    const z = radius * Math.sin(angle)
+    
+    const lineGeometry = new THREE.BufferGeometry().setFromPoints([
+      new THREE.Vector3(x, -height / 2, z),
+      new THREE.Vector3(x, height / 2, z)
+    ])
+    const line = new THREE.Line(
+      lineGeometry,
+      new THREE.LineBasicMaterial({ color: 0x000000 })
+    )
+    gridLines.add(line)
+  }
+  
+  cylinder.add(gridLines)
+
   // 创建顶部和底部的圆形
   const circleGeometry = new THREE.CircleGeometry(radius, 32) // 使用相同的半径
   const circleMaterial = new THREE.MeshPhongMaterial({

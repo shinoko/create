@@ -19,9 +19,9 @@ const init = () => {
     45,
     window.innerWidth / window.innerHeight,
     0.1,
-    2000
+    5000
   )
-  camera.position.set(800, 800, 800)
+  camera.position.set(1500, 1500, 1500)
   camera.lookAt(0, 0, 0)
   
   // 创建渲染器

@@ -43,6 +43,19 @@ const init = () => {
   cylinder = new THREE.Mesh(geometry, material)
   cylinder.position.set(0, 0, 0)
 
+  // 创建红色球体
+  const sphereRadius = radius * 0.5  // 修改为圆柱体半径的一半
+  const sphereGeometry = new THREE.SphereGeometry(sphereRadius, 32, 32)
+  const sphereMaterial = new THREE.MeshPhongMaterial({
+    color: 0xff0000,
+    specular: 0x111111,
+    shininess: 30
+  })
+  const sphere = new THREE.Mesh(sphereGeometry, sphereMaterial)
+  // 将球体放置在圆柱体顶部，球体中心点位于圆柱体顶部上方 sphereRadius 的距离
+  sphere.position.set(0, height / 2 + sphereRadius, 0)
+  cylinder.add(sphere)
+
   // 创建自定义网格线
   const gridLines = new THREE.Group()
   

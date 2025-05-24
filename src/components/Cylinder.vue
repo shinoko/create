@@ -24,7 +24,8 @@ const createTextTexture = (row, col) => {
   const context = canvas.getContext('2d')
   
   // 设置背景为透明
-  context.fillStyle = 'rgba(0, 0, 0, 0.2)'
+//   context.fillStyle = 'rgba(0, 0, 0, 0.2)'
+  context.fillStyle = 'rgba(0, 0, 0, 0)'
   context.fillRect(0, 0, canvas.width, canvas.height)
   
   // 设置文字样式

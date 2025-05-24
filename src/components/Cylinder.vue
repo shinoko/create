@@ -42,8 +42,8 @@ const init = () => {
   container.value.appendChild(renderer.domElement)
   
   // 创建圆柱体
-  const radius = 600
-  const height = 500
+  const radius = 800
+  const height = 700
   const geometry = new THREE.CylinderGeometry(radius, radius, height, 36, 5, true)
   const material = new THREE.MeshPhongMaterial({
     color: 0xffff00,
@@ -55,7 +55,7 @@ const init = () => {
   cylinder.position.set(0, 0, 0)
 
   // 创建红色球体
-  const sphereRadius = radius * 0.5  // 修改为圆柱体半径的一半
+  const sphereRadius = radius * 0.5
   const sphereGeometry = new THREE.SphereGeometry(sphereRadius, 32, 32)
   const sphereMaterial = new THREE.MeshPhongMaterial({
     color: 0xff0000,

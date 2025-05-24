@@ -33,17 +33,13 @@ const createTextTexture = (row, col) => {
   context.textAlign = 'center'
   context.textBaseline = 'middle'
   
-  // 绘制文字，根据行列位置显示不同内容，并调整位置到网格中间
-  const text = `姓名${row}-${col}`
-//   const textWidth = context.measureText(text).width
-//   const padding = 20 // 文字边距
+  // 绘制第一行文字（姓名）
+  const nameText = `姓名${row}-${col}`
+  context.fillText(nameText, canvas.width/2, canvas.height/2 - 25)
   
-  // 计算文字位置，确保在网格中间
-  const x = canvas.width / 2
-  const y = canvas.height / 2
-  
-  // 绘制文字
-  context.fillText(text, x, y)
+  // 绘制第二行文字（生日）
+  const birthdayText = '生日'
+  context.fillText(birthdayText, canvas.width/2, canvas.height/2 + 25)
   
   const texture = new THREE.CanvasTexture(canvas)
   texture.needsUpdate = true

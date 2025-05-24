@@ -31,15 +31,24 @@ const init = () => {
   container.value.appendChild(renderer.domElement)
   
   // 创建圆柱体
-  const radius = 250 // 增加半径到250
-  const geometry = new THREE.CylinderGeometry(radius, radius, 1000, 32)
+  const radius = 600
+  const height = 500
+  const geometry = new THREE.CylinderGeometry(radius, radius, height, 36, 5, true) // 36列，5行
   const material = new THREE.MeshPhongMaterial({
-    color: 0xffff00, // 黄色侧面
+    color: 0xffff00,
     specular: 0x111111,
-    shininess: 30
+    shininess: 30,
+    wireframe: false
   })
   cylinder = new THREE.Mesh(geometry, material)
-  cylinder.position.set(0, 0, 0) // 确保圆柱体在中心位置
+  cylinder.position.set(0, 0, 0)
+
+  // 创建网格线
+  const wireframe = new THREE.LineSegments(
+    new THREE.WireframeGeometry(geometry),
+    new THREE.LineBasicMaterial({ color: 0x000000, linewidth: 1 })
+  )
+  cylinder.add(wireframe) // 将网格线添加到圆柱体上
   
   // 创建顶部和底部的圆形
   const circleGeometry = new THREE.CircleGeometry(radius, 32) // 使用相同的半径
@@ -49,11 +58,11 @@ const init = () => {
   })
   
   const topCircle = new THREE.Mesh(circleGeometry, circleMaterial)
-  topCircle.position.y = 500
+  topCircle.position.y = height / 2
   topCircle.rotation.x = -Math.PI / 2
   
   const bottomCircle = new THREE.Mesh(circleGeometry, circleMaterial)
-  bottomCircle.position.y = -500
+  bottomCircle.position.y = -height / 2
   bottomCircle.rotation.x = Math.PI / 2
   
   // 添加光源

@@ -63,7 +63,7 @@ const init = () => {
     0.1,
     5000
   )
-  camera.position.set(1500, 1500, 1500)
+  camera.position.set(1500, 500, 1500)
   camera.lookAt(0, 0, 0)
   
   // 创建渲染器
@@ -213,7 +213,7 @@ const init = () => {
   controls.minPolarAngle = 0     // 限制垂直旋转角度
   controls.maxPolarAngle = Math.PI // 限制垂直旋转角度
   controls.minDistance = 400     // 设置最小缩放距离
-  controls.maxDistance = 2000    // 设置最大缩放距离
+  controls.maxDistance = 2500    // 设置最大缩放距离
   controls.zoomSpeed = 1.0       // 设置缩放速度
   
   // 开始动画循环

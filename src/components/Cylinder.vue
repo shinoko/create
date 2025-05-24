@@ -17,7 +17,7 @@ const isRotating = ref(false)
 let scene, camera, renderer, cylinder, controls
 
 // 创建文字贴图
-const createTextTexture = () => {
+const createTextTexture = (row, col) => {
   const canvas = document.createElement('canvas')
   canvas.width = 256
   canvas.height = 256
@@ -28,13 +28,22 @@ const createTextTexture = () => {
   context.fillRect(0, 0, canvas.width, canvas.height)
   
   // 设置文字样式
-  context.font = 'bold 80px Arial'
+  context.font = 'bold 40px Arial'
   context.fillStyle = 'black'
   context.textAlign = 'center'
   context.textBaseline = 'middle'
   
-  // 绘制文字，调整位置使其居中
-  context.fillText('测试', canvas.width/2, canvas.height/2)
+  // 绘制文字，根据行列位置显示不同内容，并调整位置到网格中间
+  const text = `测试${row}-${col}`
+//   const textWidth = context.measureText(text).width
+//   const padding = 20 // 文字边距
+  
+  // 计算文字位置，确保在网格中间
+  const x = canvas.width / 2
+  const y = canvas.height / 2
+  
+  // 绘制文字
+  context.fillText(text, x, y)
   
   const texture = new THREE.CanvasTexture(canvas)
   texture.needsUpdate = true
@@ -136,29 +145,34 @@ const init = () => {
     side: THREE.DoubleSide
   })
   
-  // 创建第一个网格
+  // 创建所有网格
   const gridSize = radius * 2 * Math.PI / 36 // 网格宽度
   const gridHeight = height / 5 // 网格高度
-  const gridGeometry = new THREE.PlaneGeometry(gridSize, gridHeight)
-  const gridMesh = new THREE.Mesh(gridGeometry, gridMaterial)
   
-  // 设置网格位置
-  const angle = Math.PI/4
-  const x = radius * Math.cos(angle)
-  const z = radius * Math.sin(angle)
-  gridMesh.position.set(x, -height/2 + gridHeight/2, z)
-  
-  // 使网格面向圆柱体中心，然后旋转使其背对中轴线
-  gridMesh.lookAt(0, -height/2 + gridHeight/2, 0)
-  gridMesh.rotateY(Math.PI) // 旋转180度，使文字背对中轴线
-  
-  // 应用文字贴图
-  const textTexture = createTextTexture()
-  gridMaterial.map = textTexture
-  gridMaterial.transparent = true
-  gridMaterial.opacity = 0.9
-  
-  cylinder.add(gridMesh)
+  // 创建5行36列的网格
+  for (let row = 0; row < 5; row++) {
+    for (let col = 0; col < 36; col++) {
+      const gridGeometry = new THREE.PlaneGeometry(gridSize, gridHeight)
+      const gridMesh = new THREE.Mesh(gridGeometry, gridMaterial.clone())
+      
+      // 计算网格位置，稍微调整以避免与分割线重叠
+      const angle = (col * Math.PI * 2) / 36
+      const x = radius * Math.cos(angle)
+      const z = radius * Math.sin(angle)
+      const y = -height/2 + gridHeight/2 + row * gridHeight
+      gridMesh.position.set(x, y, z)
+      
+      // 使网格面向圆柱体中心，然后旋转使其背对中轴线
+      gridMesh.lookAt(0, y, 0)
+      gridMesh.rotateY(Math.PI)
+      
+      // 应用文字贴图
+      const textTexture = createTextTexture(row + 1, col + 1)
+      gridMesh.material.map = textTexture
+      
+      cylinder.add(gridMesh)
+    }
+  }
   
   // 创建顶部和底部的圆形
   const circleGeometry = new THREE.CircleGeometry(radius, 32) // 使用相同的半径

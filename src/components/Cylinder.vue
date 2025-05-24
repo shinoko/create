@@ -16,6 +16,31 @@ const container = ref(null)
 const isRotating = ref(false)
 let scene, camera, renderer, cylinder, controls
 
+// 创建文字贴图
+const createTextTexture = () => {
+  const canvas = document.createElement('canvas')
+  canvas.width = 256
+  canvas.height = 256
+  const context = canvas.getContext('2d')
+  
+  // 设置背景为透明
+  context.fillStyle = 'rgba(0, 0, 0, 0.2)'
+  context.fillRect(0, 0, canvas.width, canvas.height)
+  
+  // 设置文字样式
+  context.font = 'bold 80px Arial'
+  context.fillStyle = 'black'
+  context.textAlign = 'center'
+  context.textBaseline = 'middle'
+  
+  // 绘制文字，调整位置使其居中
+  context.fillText('测试', canvas.width/2, canvas.height/2)
+  
+  const texture = new THREE.CanvasTexture(canvas)
+  texture.needsUpdate = true
+  return texture
+}
+
 const toggleRotation = () => {
   isRotating.value = !isRotating.value
   controls.autoRotate = isRotating.value
@@ -102,7 +127,39 @@ const init = () => {
   }
   
   cylinder.add(gridLines)
-
+  
+  // 创建网格材质
+  const gridMaterial = new THREE.MeshPhongMaterial({
+    color: 0xffffff,
+    transparent: true,
+    opacity: 0.8,
+    side: THREE.DoubleSide
+  })
+  
+  // 创建第一个网格
+  const gridSize = radius * 2 * Math.PI / 36 // 网格宽度
+  const gridHeight = height / 5 // 网格高度
+  const gridGeometry = new THREE.PlaneGeometry(gridSize, gridHeight)
+  const gridMesh = new THREE.Mesh(gridGeometry, gridMaterial)
+  
+  // 设置网格位置
+  const angle = Math.PI/4
+  const x = radius * Math.cos(angle)
+  const z = radius * Math.sin(angle)
+  gridMesh.position.set(x, -height/2 + gridHeight/2, z)
+  
+  // 使网格面向圆柱体中心，然后旋转使其背对中轴线
+  gridMesh.lookAt(0, -height/2 + gridHeight/2, 0)
+  gridMesh.rotateY(Math.PI) // 旋转180度，使文字背对中轴线
+  
+  // 应用文字贴图
+  const textTexture = createTextTexture()
+  gridMaterial.map = textTexture
+  gridMaterial.transparent = true
+  gridMaterial.opacity = 0.9
+  
+  cylinder.add(gridMesh)
+  
   // 创建顶部和底部的圆形
   const circleGeometry = new THREE.CircleGeometry(radius, 32) // 使用相同的半径
   const circleMaterial = new THREE.MeshPhongMaterial({

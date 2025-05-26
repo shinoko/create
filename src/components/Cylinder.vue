@@ -101,9 +101,11 @@ const init = () => {
   // 创建自定义网格线
   const gridLines = new THREE.Group()
   
+  const lineCount = 7
+
   // 创建水平线
-  for (let i = 0; i <= 5; i++) {
-    const y = (i * height / 5) - height / 2
+  for (let i = 0; i <= lineCount; i++) {
+    const y = (i * height / lineCount) - height / 2
     const circleGeometry = new THREE.CircleGeometry(radius, 36)
     const circleEdges = new THREE.EdgesGeometry(circleGeometry)
     const circleLine = new THREE.LineSegments(

@@ -22,26 +22,26 @@ const createTextTexture = (row, col) => {
   canvas.width = 256
   canvas.height = 256
   const context = canvas.getContext('2d')
-  
+
   // 设置背景为透明
-//   context.fillStyle = 'rgba(0, 0, 0, 0.2)'
+  //   context.fillStyle = 'rgba(0, 0, 0, 0.2)'
   context.fillStyle = 'rgba(0, 0, 0, 0)'
   context.fillRect(0, 0, canvas.width, canvas.height)
-  
+
   // 设置文字样式
   context.font = 'bold 40px Arial'
   context.fillStyle = 'black'
   context.textAlign = 'center'
   context.textBaseline = 'middle'
-  
+
   // 绘制第一行文字（姓名）
   const nameText = `姓名${row}-${col}`
-  context.fillText(nameText, canvas.width/2, canvas.height/2 - 25)
-  
+  context.fillText(nameText, canvas.width / 2, canvas.height / 2 - 25)
+
   // 绘制第二行文字（生日）
   const birthdayText = '生日'
-  context.fillText(birthdayText, canvas.width/2, canvas.height/2 + 25)
-  
+  context.fillText(birthdayText, canvas.width / 2, canvas.height / 2 + 25)
+
   const texture = new THREE.CanvasTexture(canvas)
   texture.needsUpdate = true
   return texture
@@ -55,7 +55,7 @@ const toggleRotation = () => {
 const init = () => {
   // 创建场景
   scene = new THREE.Scene()
-  
+
   // 创建相机
   camera = new THREE.PerspectiveCamera(
     45,
@@ -65,16 +65,16 @@ const init = () => {
   )
   camera.position.set(1500, 500, 1500)
   camera.lookAt(0, 0, 0)
-  
+
   // 创建渲染器
   renderer = new THREE.WebGLRenderer({ antialias: true })
   renderer.setSize(window.innerWidth, window.innerHeight)
   renderer.setClearColor(0xf5f5dc)
   container.value.appendChild(renderer.domElement)
-  
+
   // 创建圆柱体
   const radius = 800
-  const height = 700
+  const height = 1400
   const geometry = new THREE.CylinderGeometry(radius, radius, height, 36, 5, true)
   const material = new THREE.MeshPhongMaterial({
     color: 0xffff00,
@@ -100,8 +100,10 @@ const init = () => {
 
   // 创建自定义网格线
   const gridLines = new THREE.Group()
-  
+
   const lineCount = 7
+  // const gridRows = [2, 4, 8, 10, 12, 36, 36] // 每行的网格数量
+  const gridRows = [36, 36, 12, 10, 8, 4, 2] // 每行的网格数量
 
   // 创建水平线
   for (let i = 0; i <= lineCount; i++) {
@@ -116,26 +118,32 @@ const init = () => {
     circleLine.position.y = y
     gridLines.add(circleLine)
   }
-  
+
   // 创建垂直线
-  for (let i = 0; i < 36; i++) {
-    const angle = (i * Math.PI * 2) / 36
-    const x = radius * Math.cos(angle)
-    const z = radius * Math.sin(angle)
-    
-    const lineGeometry = new THREE.BufferGeometry().setFromPoints([
-      new THREE.Vector3(x, -height / 2, z),
-      new THREE.Vector3(x, height / 2, z)
-    ])
-    const line = new THREE.Line(
-      lineGeometry,
-      new THREE.LineBasicMaterial({ color: 0x000000 })
-    )
-    gridLines.add(line)
+  for (let row = 0; row < lineCount; row++) {
+    const colsInRow = gridRows[row]
+    const yStart = (row * height / lineCount) - height / 2
+    const yEnd = ((row + 1) * height / lineCount) - height / 2
+
+    for (let i = 0; i < colsInRow; i++) {
+      const angle = (i * Math.PI * 2) / colsInRow
+      const x = radius * Math.cos(angle)
+      const z = radius * Math.sin(angle)
+
+      const lineGeometry = new THREE.BufferGeometry().setFromPoints([
+        new THREE.Vector3(x, yStart, z),
+        new THREE.Vector3(x, yEnd, z)
+      ])
+      const line = new THREE.Line(
+        lineGeometry,
+        new THREE.LineBasicMaterial({ color: 0x000000 })
+      )
+      gridLines.add(line)
+    }
   }
-  
+
   cylinder.add(gridLines)
-  
+
   // 创建网格材质
   const gridMaterial = new THREE.MeshPhongMaterial({
     color: 0xffffff,
@@ -143,65 +151,65 @@ const init = () => {
     opacity: 0.8,
     side: THREE.DoubleSide
   })
-  
+
   // 创建所有网格
   const gridSize = radius * 2 * Math.PI / 36 // 网格宽度
   const gridHeight = height / 5 // 网格高度
-  
+
   // 创建5行36列的网格
   for (let row = 0; row < 5; row++) {
     for (let col = 0; col < 36; col++) {
       const gridGeometry = new THREE.PlaneGeometry(gridSize, gridHeight)
       const gridMesh = new THREE.Mesh(gridGeometry, gridMaterial.clone())
-      
+
       // 计算网格位置，稍微调整以避免与分割线重叠
-    //   const angle = (col * Math.PI * 2) / 36
-      const angle = ((col + (col+1))* Math.PI ) / 36
+      //   const angle = (col * Math.PI * 2) / 36
+      const angle = ((col + (col + 1)) * Math.PI) / 36
       const x = radius * Math.cos(angle)
       const z = radius * Math.sin(angle)
-      const y = -height/2 + gridHeight/2 + row * gridHeight
+      const y = -height / 2 + gridHeight / 2 + row * gridHeight
       gridMesh.position.set(x, y, z)
-      
+
       // 使网格面向圆柱体中心，然后旋转使其背对中轴线
       gridMesh.lookAt(0, y, 0)
       gridMesh.rotateY(Math.PI)
-      
+
       // 应用文字贴图
       const textTexture = createTextTexture(row + 1, col + 1)
       gridMesh.material.map = textTexture
-      
+
       cylinder.add(gridMesh)
     }
   }
-  
+
   // 创建顶部和底部的圆形
   const circleGeometry = new THREE.CircleGeometry(radius, 32) // 使用相同的半径
   const circleMaterial = new THREE.MeshPhongMaterial({
     color: 0xff69b4, // 粉色
     side: THREE.DoubleSide
   })
-  
+
   const topCircle = new THREE.Mesh(circleGeometry, circleMaterial)
   topCircle.position.y = height / 2
   topCircle.rotation.x = -Math.PI / 2
-  
+
   const bottomCircle = new THREE.Mesh(circleGeometry, circleMaterial)
   bottomCircle.position.y = -height / 2
   bottomCircle.rotation.x = Math.PI / 2
-  
+
   // 添加光源
   const ambientLight = new THREE.AmbientLight(0xffffff, 0.5)
   scene.add(ambientLight)
-  
+
   const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8)
   directionalLight.position.set(1, 1, 1) // 调整光源位置
   scene.add(directionalLight)
-  
+
   // 添加所有对象到场景
   scene.add(cylinder)
   scene.add(topCircle)
   scene.add(bottomCircle)
-  
+
   // 添加轨道控制器
   controls = new OrbitControls(camera, renderer.domElement)
   controls.enableDamping = true
@@ -217,7 +225,7 @@ const init = () => {
   controls.minDistance = 400     // 设置最小缩放距离
   controls.maxDistance = 2500    // 设置最大缩放距离
   controls.zoomSpeed = 1.0       // 设置缩放速度
-  
+
   // 开始动画循环
   animate()
 }
@@ -282,4 +290,4 @@ onBeforeUnmount(() => {
 .control-btn:active {
   background-color: #3d8b40;
 }
-</style> 
+</style>

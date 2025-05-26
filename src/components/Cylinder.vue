@@ -22,26 +22,48 @@ const createTextTexture = (row, col) => {
   canvas.width = 256
   canvas.height = 256
   const context = canvas.getContext('2d')
-
+  
   // 设置背景为透明
-  //   context.fillStyle = 'rgba(0, 0, 0, 0.2)'
   context.fillStyle = 'rgba(0, 0, 0, 0)'
   context.fillRect(0, 0, canvas.width, canvas.height)
-
+  
   // 设置文字样式
   context.font = 'bold 40px Arial'
   context.fillStyle = 'black'
   context.textAlign = 'center'
   context.textBaseline = 'middle'
-
-  // 绘制第一行文字（姓名）
-  const nameText = `姓名${row}-${col}`
-  context.fillText(nameText, canvas.width / 2, canvas.height / 2 - 25)
-
-  // 绘制第二行文字（生日）
-  const birthdayText = '生日'
-  context.fillText(birthdayText, canvas.width / 2, canvas.height / 2 + 25)
-
+  
+  let text = ''
+  switch(row) {
+    case 6:
+      text = col === 0 ? '阴' : '阳'
+      break
+    case 5: 
+      const seasons = ['春', '夏', '秋', '冬']
+      text = seasons[col]
+      break
+    case 4: 
+      const trigrams = ['乾', '兑', '离', '震', '巽', '坎', '艮', '坤']
+      text = trigrams[col]
+      break
+    case 3:
+      const stems = ['甲', '乙', '丙', '丁', '戊', '己', '庚', '辛', '壬', '癸']
+      text = stems[col]
+      break
+    case 2: 
+      const branches = ['子', '丑', '寅', '卯', '辰', '巳', '午', '未', '申', '酉', '辛', '亥']
+      text = branches[col]
+      break
+    case 1: 
+      text = String(col + 1).padStart(3, '0')
+      break
+    case 0: 
+      text = `姓名${String(col + 1).padStart(2, '0')}`
+      break
+  }
+  
+  context.fillText(text, canvas.width / 2, canvas.height / 2)
+  
   const texture = new THREE.CanvasTexture(canvas)
   texture.needsUpdate = true
   return texture
@@ -154,17 +176,20 @@ const init = () => {
 
   // 创建所有网格
   const gridSize = radius * 2 * Math.PI / 36 // 网格宽度
-  const gridHeight = height / 5 // 网格高度
+  const gridHeight = height / lineCount // 网格高度
 
   // 创建5行36列的网格
-  for (let row = 0; row < 5; row++) {
-    for (let col = 0; col < 36; col++) {
+  for (let row = 0; row < lineCount; row++) {
+
+    const colsInRow = gridRows[row]
+
+    for (let col = 0; col < colsInRow; col++) {
       const gridGeometry = new THREE.PlaneGeometry(gridSize, gridHeight)
       const gridMesh = new THREE.Mesh(gridGeometry, gridMaterial.clone())
 
       // 计算网格位置，稍微调整以避免与分割线重叠
       //   const angle = (col * Math.PI * 2) / 36
-      const angle = ((col + (col + 1)) * Math.PI) / 36
+      const angle = ((col + (col + 1)) * Math.PI) / colsInRow
       const x = radius * Math.cos(angle)
       const z = radius * Math.sin(angle)
       const y = -height / 2 + gridHeight / 2 + row * gridHeight
@@ -175,7 +200,7 @@ const init = () => {
       gridMesh.rotateY(Math.PI)
 
       // 应用文字贴图
-      const textTexture = createTextTexture(row + 1, col + 1)
+      const textTexture = createTextTexture(row, col)
       gridMesh.material.map = textTexture
 
       cylinder.add(gridMesh)

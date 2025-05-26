@@ -99,7 +99,7 @@ const init = () => {
   const height = 1400
   const geometry = new THREE.CylinderGeometry(radius, radius, height, 36, 5, true)
   const material = new THREE.MeshPhongMaterial({
-    color: 0xffff00,
+    color: 0xffee5c,
     specular: 0x111111,
     shininess: 30,
     wireframe: false
@@ -210,7 +210,7 @@ const init = () => {
   // 创建顶部和底部的圆形
   const circleGeometry = new THREE.CircleGeometry(radius, 32) // 使用相同的半径
   const circleMaterial = new THREE.MeshPhongMaterial({
-    color: 0xff69b4, // 粉色
+    color: 0xffee5c,
     side: THREE.DoubleSide
   })
 
@@ -243,7 +243,7 @@ const init = () => {
   controls.enablePan = false     // 保持禁用平移
   controls.enableZoom = true     // 启用缩放
   controls.autoRotate = false    // 初始状态不自动旋转
-  controls.autoRotateSpeed = -2.0 // 设置自动旋转速度
+  controls.autoRotateSpeed = -3.0 // 设置自动旋转速度
   controls.target.set(0, 0, 0)   // 设置旋转中心点为圆柱体中心
   controls.minPolarAngle = 0     // 限制垂直旋转角度
   controls.maxPolarAngle = Math.PI // 限制垂直旋转角度

@@ -28,7 +28,7 @@ const createTextTexture = (row, col) => {
   context.fillRect(0, 0, canvas.width, canvas.height)
   
   // 设置文字样式
-  context.font = 'bold 40px Arial'
+  context.font = 'bold 60px Arial'
   context.fillStyle = 'black'
   context.textAlign = 'center'
   context.textBaseline = 'middle'
@@ -80,7 +80,7 @@ const init = () => {
 
   // 创建相机
   camera = new THREE.PerspectiveCamera(
-    45,
+    60,
     window.innerWidth / window.innerHeight,
     0.1,
     5000
@@ -223,10 +223,10 @@ const init = () => {
   bottomCircle.rotation.x = Math.PI / 2
 
   // 添加光源
-  const ambientLight = new THREE.AmbientLight(0xffffff, 0.5)
+  const ambientLight = new THREE.AmbientLight(0xffffff, 1)
   scene.add(ambientLight)
 
-  const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8)
+  const directionalLight = new THREE.DirectionalLight(0xffffff, 1)
   directionalLight.position.set(1, 1, 1) // 调整光源位置
   scene.add(directionalLight)
 

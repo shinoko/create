@@ -16,54 +16,46 @@ const container = ref(null)
 const isRotating = ref(false)
 let scene, camera, renderer, cylinder, controls
 
+const TEXT_ARRAY = [
+  ['阴', '阳'],
+  ['天', '人', '地'],
+  ['春', '夏', '秋', '冬'],
+  ['木', '火', '水', '金', '土'],
+  ['上', '下', '左', '右', '前', '后'],
+  ['天枢', '天璇', '天机', '天权', '玉衡', '开阳', '瑶光'],
+  ['乾', '兑', '离', '震', '巽', '坎', '艮', '坤'],
+  ['甲', '乙', '丙', '丁', '戊', '己', '庚', '辛', '壬', '癸'],
+  ['子', '丑', '寅', '卯', '辰', '巳', '午', '未', '申', '酉', '辛', '亥'],
+]
+
 // 创建文字贴图
 const createTextTexture = (row, col) => {
+  let text = ''
+  if (lineCount - row - 1 < TEXT_ARRAY.length) {
+    const itemArray = TEXT_ARRAY[lineCount - row - 1];
+    text = itemArray[col]
+  } else {
+    return null
+    // text = `姓名${String(lineCount - row - 1)}-${String(col + 1).padStart(2, '0')}`
+  }
+
   const canvas = document.createElement('canvas')
   canvas.width = 256
   canvas.height = 256
   const context = canvas.getContext('2d')
-  
+
   // 设置背景为透明
   context.fillStyle = 'rgba(0, 0, 0, 0)'
   context.fillRect(0, 0, canvas.width, canvas.height)
-  
+
   // 设置文字样式
   context.font = 'bold 60px Arial'
   context.fillStyle = 'black'
   context.textAlign = 'center'
   context.textBaseline = 'middle'
-  
-  let text = ''
-  switch(row) {
-    case 6:
-      text = col === 0 ? '阴' : '阳'
-      break
-    case 5: 
-      const seasons = ['春', '夏', '秋', '冬']
-      text = seasons[col]
-      break
-    case 4: 
-      const trigrams = ['乾', '兑', '离', '震', '巽', '坎', '艮', '坤']
-      text = trigrams[col]
-      break
-    case 3:
-      const stems = ['甲', '乙', '丙', '丁', '戊', '己', '庚', '辛', '壬', '癸']
-      text = stems[col]
-      break
-    case 2: 
-      const branches = ['子', '丑', '寅', '卯', '辰', '巳', '午', '未', '申', '酉', '辛', '亥']
-      text = branches[col]
-      break
-    case 1: 
-      text = String(col + 1).padStart(3, '0')
-      break
-    case 0: 
-      text = `姓名${String(col + 1).padStart(2, '0')}`
-      break
-  }
-  
+
   context.fillText(text, canvas.width / 2, canvas.height / 2)
-  
+
   const texture = new THREE.CanvasTexture(canvas)
   texture.needsUpdate = true
   return texture
@@ -73,6 +65,12 @@ const toggleRotation = () => {
   isRotating.value = !isRotating.value
   controls.autoRotate = isRotating.value
 }
+
+const lineCount = 64
+const radius = 1800
+const height = 6400
+// const gridRows = [36, 36, 12, 10, 8, 4, 2] // 每行的网格数量
+const gridRows = Array(lineCount - TEXT_ARRAY.length).fill(64).concat([12, 10, 8, 7, 6, 5, 4, 3, 2]) // 每行的网格数量
 
 const init = () => {
   // 创建场景
@@ -85,7 +83,7 @@ const init = () => {
     0.1,
     5000
   )
-  camera.position.set(1500, 500, 1500)
+  camera.position.set(3500, 1500, 3500)
   camera.lookAt(0, 0, 0)
 
   // 创建渲染器
@@ -95,8 +93,8 @@ const init = () => {
   container.value.appendChild(renderer.domElement)
 
   // 创建圆柱体
-  const radius = 800
-  const height = 1400
+  // const radius = 800
+  // const height = 1400
   const geometry = new THREE.CylinderGeometry(radius, radius, height, 36, 5, true)
   const material = new THREE.MeshPhongMaterial({
     color: 0xffee5c,
@@ -123,9 +121,8 @@ const init = () => {
   // 创建自定义网格线
   const gridLines = new THREE.Group()
 
-  const lineCount = 7
-  // const gridRows = [2, 4, 8, 10, 12, 36, 36] // 每行的网格数量
-  const gridRows = [36, 36, 12, 10, 8, 4, 2] // 每行的网格数量
+  // const lineCount = 7
+  // const gridRows = [36, 36, 12, 10, 8, 4, 2] // 每行的网格数量
 
   // 创建水平线
   for (let i = 0; i <= lineCount; i++) {
@@ -184,26 +181,29 @@ const init = () => {
     const colsInRow = gridRows[row]
 
     for (let col = 0; col < colsInRow; col++) {
-      const gridGeometry = new THREE.PlaneGeometry(gridSize, gridHeight)
-      const gridMesh = new THREE.Mesh(gridGeometry, gridMaterial.clone())
-
-      // 计算网格位置，稍微调整以避免与分割线重叠
-      //   const angle = (col * Math.PI * 2) / 36
-      const angle = ((col + (col + 1)) * Math.PI) / colsInRow
-      const x = radius * Math.cos(angle)
-      const z = radius * Math.sin(angle)
-      const y = -height / 2 + gridHeight / 2 + row * gridHeight
-      gridMesh.position.set(x, y, z)
-
-      // 使网格面向圆柱体中心，然后旋转使其背对中轴线
-      gridMesh.lookAt(0, y, 0)
-      gridMesh.rotateY(Math.PI)
-
-      // 应用文字贴图
       const textTexture = createTextTexture(row, col)
-      gridMesh.material.map = textTexture
+      if (textTexture) {
+        const gridGeometry = new THREE.PlaneGeometry(gridSize, gridHeight)
+        const gridMesh = new THREE.Mesh(gridGeometry, gridMaterial.clone())
 
-      cylinder.add(gridMesh)
+        // 计算网格位置，稍微调整以避免与分割线重叠
+        //   const angle = (col * Math.PI * 2) / 36
+        const angle = ((col + (col + 1)) * Math.PI) / colsInRow
+        const x = radius * Math.cos(angle)
+        const z = radius * Math.sin(angle)
+        const y = -height / 2 + gridHeight / 2 + row * gridHeight
+        gridMesh.position.set(x, y, z)
+
+        // 使网格面向圆柱体中心，然后旋转使其背对中轴线
+        gridMesh.lookAt(0, y, 0)
+        gridMesh.rotateY(Math.PI)
+
+        // 应用文字贴图
+        gridMesh.material.map = textTexture
+
+        cylinder.add(gridMesh)
+      }
+
     }
   }
 
@@ -247,10 +247,10 @@ const init = () => {
   controls.target.set(0, 0, 0)   // 设置旋转中心点为圆柱体中心
   controls.minPolarAngle = 0     // 限制垂直旋转角度
   controls.maxPolarAngle = Math.PI // 限制垂直旋转角度
-  controls.minDistance = 400     // 设置最小缩放距离
-  controls.maxDistance = 2500    // 设置最大缩放距离
+  controls.minDistance = 1800     // 设置最小缩放距离
+  controls.maxDistance = 5500    // 设置最大缩放距离
   controls.zoomSpeed = 1.0       // 设置缩放速度
-  
+
   // 设置平移限制
   controls.minPolarAngle = 0
   controls.maxPolarAngle = Math.PI

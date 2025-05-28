@@ -11,10 +11,40 @@
 import { ref, onMounted, onBeforeUnmount } from 'vue'
 import * as THREE from 'three'
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls'
+import * as XLSX from 'xlsx'
 
 const container = ref(null)
 const isRotating = ref(false)
 let scene, camera, renderer, cylinder, controls
+let excelData = ref([])
+
+// 读取Excel文件
+const readExcelFile = async () => {
+  try {
+    const response = await fetch('/data.xlsx')
+    const arrayBuffer = await response.arrayBuffer()
+    const workbook = XLSX.read(arrayBuffer, { type: 'array' })
+    const firstSheetName = workbook.SheetNames[0]
+    const worksheet = workbook.Sheets[firstSheetName]
+    const data = XLSX.utils.sheet_to_json(worksheet, { header: 1 })
+
+    // 确保数据是10行64列的二维数组
+    const formattedData = data.slice(0, lineCount - TEXT_ARRAY.length).map(row => {
+      const newRow = new Array(columnCount).fill('')
+      row.forEach((cell, index) => {
+        if (index < columnCount) {
+          newRow[index] = cell || ''
+        }
+      })
+      return newRow
+    })
+
+    excelData.value = formattedData
+    console.log('Excel数据加载成功：', excelData.value)
+  } catch (error) {
+    console.error('读取Excel文件失败：', error)
+  }
+}
 
 const TEXT_ARRAY = [
   ['阴', '阳'],
@@ -32,12 +62,17 @@ const TEXT_ARRAY = [
 const createTextTexture = (row, col) => {
   let text = ''
   if (lineCount - row - 1 < TEXT_ARRAY.length) {
-    const itemArray = TEXT_ARRAY[lineCount - row - 1];
+    const itemArray = TEXT_ARRAY[lineCount - row - 1]
     text = itemArray[col]
-  } else {
-    return null
-    // text = `姓名${String(lineCount - row - 1)}-${String(col + 1).padStart(2, '0')}`
+  } else if (excelData.value.length > 0) {
+    // 使用Excel数据
+    const excelRow = lineCount - row - 1 - TEXT_ARRAY.length
+    if (excelRow >= 0 && excelRow < excelData.value.length) {
+      text = excelData.value[excelRow][col] || ''
+    }
   }
+
+  if (!text) return null
 
   const canvas = document.createElement('canvas')
   canvas.width = 256
@@ -69,8 +104,9 @@ const toggleRotation = () => {
 const lineCount = 64
 const radius = 1800
 const height = 6400
+const columnCount = 64
 // const gridRows = [36, 36, 12, 10, 8, 4, 2] // 每行的网格数量
-const gridRows = Array(lineCount - TEXT_ARRAY.length).fill(64).concat([12, 10, 8, 7, 6, 5, 4, 3, 2]) // 每行的网格数量
+const gridRows = Array(lineCount - TEXT_ARRAY.length).fill(columnCount).concat([12, 10, 8, 7, 6, 5, 4, 3, 2]) // 每行的网格数量
 
 const init = () => {
   // 创建场景
@@ -275,8 +311,9 @@ const handleResize = () => {
   renderer.setSize(window.innerWidth, window.innerHeight)
 }
 
-onMounted(() => {
-  init()
+onMounted(async () => {
+  await readExcelFile() // 先读取Excel文件
+  init() // 然后初始化3D场景
   window.addEventListener('resize', handleResize)
 })
 

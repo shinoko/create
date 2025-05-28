@@ -63,12 +63,16 @@ const createTextTexture = (row, col) => {
   let text = ''
   if (lineCount - row - 1 < TEXT_ARRAY.length) {
     const itemArray = TEXT_ARRAY[lineCount - row - 1]
-    text = itemArray[col]
+    // 倒转文字顺序
+    const reversedIndex = itemArray.length - 1 - col
+    text = itemArray[reversedIndex]
   } else if (excelData.value.length > 0) {
     // 使用Excel数据
     const excelRow = lineCount - row - 1 - TEXT_ARRAY.length
     if (excelRow >= 0 && excelRow < excelData.value.length) {
-      text = excelData.value[excelRow][col] || ''
+      // 倒转Excel数据的列顺序
+      const reversedCol = columnCount - 1 - col
+      text = excelData.value[excelRow][reversedCol] || ''
     }
   }
 

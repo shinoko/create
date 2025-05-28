@@ -240,7 +240,7 @@ const init = () => {
   controls.enableDamping = true
   controls.dampingFactor = 0.05
   controls.enableRotate = true   // 启用旋转
-  controls.enablePan = false     // 保持禁用平移
+  controls.enablePan = true     // 启用平移
   controls.enableZoom = true     // 启用缩放
   controls.autoRotate = false    // 初始状态不自动旋转
   controls.autoRotateSpeed = -3.0 // 设置自动旋转速度
@@ -250,6 +250,14 @@ const init = () => {
   controls.minDistance = 400     // 设置最小缩放距离
   controls.maxDistance = 2500    // 设置最大缩放距离
   controls.zoomSpeed = 1.0       // 设置缩放速度
+  
+  // 设置平移限制
+  controls.minPolarAngle = 0
+  controls.maxPolarAngle = Math.PI
+  controls.screenSpacePanning = true // 使用屏幕空间平移
+  controls.panSpeed = 1.0 // 设置平移速度
+  controls.maxPolarAngle = Math.PI // 限制垂直旋转角度
+  controls.minPolarAngle = 0 // 限制垂直旋转角度
 
   // 开始动画循环
   animate()

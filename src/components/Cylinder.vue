@@ -17,6 +17,7 @@ const container = ref(null)
 const isRotating = ref(false)
 let scene, camera, renderer, cylinder, controls
 let excelData = ref([])
+let bgTexture = null
 
 // 读取Excel文件
 const readExcelFile = async () => {
@@ -64,6 +65,25 @@ const TEXT_ARRAY = [
 // 倒序获取每个子数组的长度
 const lengthArray = TEXT_ARRAY.map(arr => arr.length).reverse()
 
+// 加载背景图片
+const loadBackgroundTexture = () => {
+  return new Promise((resolve, reject) => {
+    const textureLoader = new THREE.TextureLoader()
+    textureLoader.load(
+      '/bg.jpg',
+      (texture) => {
+        bgTexture = texture
+        resolve(texture)
+      },
+      undefined,
+      (error) => {
+        console.error('加载背景图片失败：', error)
+        reject(error)
+      }
+    )
+  })
+}
+
 // 创建文字贴图
 const createTextTexture = (row, col) => {
   let text = ''
@@ -86,22 +106,50 @@ const createTextTexture = (row, col) => {
 
   const canvas = document.createElement('canvas')
   canvas.width = 256
-  canvas.height = 256
+  // canvas.height = 256
+  canvas.height = height/lineCount
   const context = canvas.getContext('2d')
 
-  // 设置背景为透明
-  context.fillStyle = 'rgba(0, 0, 0, 0)'
-  context.fillRect(0, 0, canvas.width, canvas.height)
-
-  const isLarge = lineCount - row - 1 < TEXT_ARRAY.length;
+  const isLarge = lineCount - row - 1 < TEXT_ARRAY.length
+  
+  // 如果有背景图片，先绘制背景
+  if (!isLarge && bgTexture) {
+    const img = bgTexture.image
+    // 计算图片的缩放比例，保持宽高比
+    const imgRatio = img.width / img.height
+    const canvasRatio = canvas.width / canvas.height
+    
+    let drawWidth, drawHeight, offsetX = 0, offsetY = 0
+    
+    if (imgRatio > canvasRatio) {
+      // 图片更宽，以高度为基准
+      drawHeight = canvas.height
+      drawWidth = drawHeight * imgRatio
+      offsetX = (canvas.width - drawWidth) / 2
+    } else {
+      // 图片更高，以宽度为基准
+      drawWidth = canvas.width
+      drawHeight = drawWidth / imgRatio
+      offsetY = (canvas.height - drawHeight) / 2
+    }
+    
+    // 绘制背景图片，确保填满整个画布
+    context.drawImage(img, offsetX, offsetY, drawWidth, drawHeight)
+  } else {
+    // 如果没有背景图片，使用透明背景
+    context.fillStyle = 'rgba(0, 0, 0, 0)'
+    context.fillRect(0, 0, canvas.width, canvas.height)
+  }
+  
+  
   // 设置文字样式
   context.font = isLarge ? 'bold 60px Arial' : 'bold 30px Arial'
   context.fillStyle = 'black'
   context.textAlign = 'center'
   context.textBaseline = 'middle'
-
+  
   context.fillText(text, canvas.width / 2, canvas.height / 2)
-
+  
   const texture = new THREE.CanvasTexture(canvas)
   texture.needsUpdate = true
   return texture
@@ -223,7 +271,6 @@ const init = () => {
   const gridSize = radius * 2 * Math.PI / 36 // 网格宽度
   const gridHeight = height / lineCount // 网格高度
 
-  // 创建5行36列的网格
   for (let row = 0; row < lineCount; row++) {
 
     const colsInRow = gridRows[row]
@@ -324,9 +371,16 @@ const handleResize = () => {
 }
 
 onMounted(async () => {
-  await readExcelFile() // 先读取Excel文件
-  init() // 然后初始化3D场景
-  window.addEventListener('resize', handleResize)
+  try {
+    await Promise.all([
+      readExcelFile(), // 读取Excel文件
+      loadBackgroundTexture() // 加载背景图片
+    ])
+    init() // 初始化3D场景
+    window.addEventListener('resize', handleResize)
+  } catch (error) {
+    console.error('初始化失败：', error)
+  }
 })
 
 onBeforeUnmount(() => {

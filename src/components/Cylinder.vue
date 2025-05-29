@@ -46,6 +46,7 @@ const readExcelFile = async () => {
   }
 }
 
+const rowNumbers = Array.from({ length: 64 }, (_, i) => i + 1) // 生成1-64的数组
 const TEXT_ARRAY = [
   ['阴', '阳'],
   ['天', '人', '地'],
@@ -56,7 +57,12 @@ const TEXT_ARRAY = [
   ['乾', '兑', '离', '震', '巽', '坎', '艮', '坤'],
   ['甲', '乙', '丙', '丁', '戊', '己', '庚', '辛', '壬', '癸'],
   ['子', '丑', '寅', '卯', '辰', '巳', '午', '未', '申', '酉', '辛', '亥'],
+  rowNumbers,
 ]
+
+
+// 倒序获取每个子数组的长度
+const lengthArray = TEXT_ARRAY.map(arr => arr.length).reverse()
 
 // 创建文字贴图
 const createTextTexture = (row, col) => {
@@ -87,8 +93,9 @@ const createTextTexture = (row, col) => {
   context.fillStyle = 'rgba(0, 0, 0, 0)'
   context.fillRect(0, 0, canvas.width, canvas.height)
 
+  const isLarge = lineCount - row - 1 < TEXT_ARRAY.length;
   // 设置文字样式
-  context.font = 'bold 60px Arial'
+  context.font = isLarge ? 'bold 60px Arial' : 'bold 30px Arial'
   context.fillStyle = 'black'
   context.textAlign = 'center'
   context.textBaseline = 'middle'
@@ -107,10 +114,11 @@ const toggleRotation = () => {
 
 const lineCount = 64
 const radius = 1800
-const height = 6400
+const height = 12800
 const columnCount = 64
 // const gridRows = [36, 36, 12, 10, 8, 4, 2] // 每行的网格数量
-const gridRows = Array(lineCount - TEXT_ARRAY.length).fill(columnCount).concat([12, 10, 8, 7, 6, 5, 4, 3, 2]) // 每行的网格数量
+const gridRows = Array(lineCount - TEXT_ARRAY.length).fill(columnCount).concat(lengthArray) // 每行的网格数量
+
 
 const init = () => {
   // 创建场景

@@ -115,23 +115,17 @@ const createTextTexture = (row, col) => {
   // 如果有背景图片，先绘制背景
   if (!isLarge && bgTexture) {
     const img = bgTexture.image
-    // 计算图片的缩放比例，保持宽高比
-    const imgRatio = img.width / img.height
-    const canvasRatio = canvas.width / canvas.height
-    
-    let drawWidth, drawHeight, offsetX = 0, offsetY = 0
-    
-    if (imgRatio > canvasRatio) {
-      // 图片更宽，以高度为基准
-      drawHeight = canvas.height
-      drawWidth = drawHeight * imgRatio
-      offsetX = (canvas.width - drawWidth) / 2
-    } else {
-      // 图片更高，以宽度为基准
-      drawWidth = canvas.width
-      drawHeight = drawWidth / imgRatio
-      offsetY = (canvas.height - drawHeight) / 2
-    }
+    // 计算网格大小
+    const gridSize = radius * 2 * Math.PI / 80
+    const gridHeight = height / lineCount
+
+    // 设置绘制尺寸为网格大小
+    let drawWidth = gridSize
+    let drawHeight = gridHeight
+
+    // 计算偏移量使图片居中
+    let offsetX = (canvas.width - drawWidth) / 2
+    let offsetY = (canvas.height - drawHeight) / 2
     
     // 绘制背景图片，确保填满整个画布
     context.drawImage(img, offsetX, offsetY, drawWidth, drawHeight)

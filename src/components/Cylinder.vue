@@ -177,7 +177,7 @@ const init = () => {
   camera.lookAt(0, 0, 0)
 
   // 创建渲染器
-  renderer = new THREE.WebGLRenderer({ antialias: true })
+  renderer = new THREE.WebGLRenderer({ antialias: true, logarithmicDepthBuffer: true })
   renderer.setSize(window.innerWidth, window.innerHeight)
   renderer.setClearColor(0xf5f5dc)
   container.value.appendChild(renderer.domElement)

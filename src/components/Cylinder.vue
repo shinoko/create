@@ -154,9 +154,9 @@ const toggleRotation = () => {
   controls.autoRotate = isRotating.value
 }
 
-const lineCount = 64
+const lineCount = 32
 const radius = 1800
-const height = 12800
+const height = 6400
 const columnCount = 64
 // const gridRows = [36, 36, 12, 10, 8, 4, 2] // 每行的网格数量
 const gridRows = Array(lineCount - TEXT_ARRAY.length).fill(columnCount).concat(lengthArray) // 每行的网格数量
@@ -171,9 +171,9 @@ const init = () => {
     60,
     window.innerWidth / window.innerHeight,
     0.1,
-    5000
+    12800
   )
-  camera.position.set(3500, 1500, 3500)
+  camera.position.set(3500, 1500, 500)
   camera.lookAt(0, 0, 0)
 
   // 创建渲染器

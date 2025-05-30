@@ -449,7 +449,7 @@ const handleResize = () => {
   renderer.setSize(window.innerWidth, window.innerHeight)
 }
 
-// 添加鼠标移动事件处理
+// 修改鼠标移动事件处理
 const onMouseMove = (event) => {
   // 计算鼠标在归一化设备坐标中的位置
   mouse.x = (event.clientX / window.innerWidth) * 2 - 1
@@ -458,22 +458,27 @@ const onMouseMove = (event) => {
   // 更新射线
   raycaster.setFromCamera(mouse, camera)
 
-  // 检查射线与网格的相交
-  const intersects = raycaster.intersectObjects(gridMeshes)
+  // 检查射线与圆柱体的相交
+  const intersects = raycaster.intersectObject(cylinder)
 
   if (intersects.length > 0) {
     const intersect = intersects[0]
-    const mesh = intersect.object
-    const row = Math.floor((mesh.position.y + height / 2) / (height / lineCount))
-    // console.log("🚀 -- onMouseMove -- row:", row)
+    const point = intersect.point
+    // 计算行号
+    const row = Math.floor((point.y + height / 2) / (height / lineCount))
     
-    currentRow.value = row
-    showTooltip.value = true
-    
-    // 更新tooltip位置
-    tooltipStyle.value = {
-      left: `${event.clientX + 10}px`,
-      top: `${event.clientY + 10}px`
+    // 确保行号在有效范围内
+    if (row >= 0 && row < lineCount-TEXT_ARRAY.length) {
+      currentRow.value = row
+      showTooltip.value = true
+      
+      // 更新tooltip位置
+      tooltipStyle.value = {
+        left: `${event.clientX + 10}px`,
+        top: `${event.clientY + 10}px`
+      }
+    } else {
+      showTooltip.value = false
     }
   } else {
     showTooltip.value = false

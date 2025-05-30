@@ -16,6 +16,9 @@
         选择Excel文件
       </button>
     </div>
+    <div v-if="showTooltip" class="tooltip" :style="tooltipStyle">
+      第 {{ currentRow + 1 }} 行
+    </div>
   </div>
 </template>
 
@@ -29,10 +32,20 @@ import bgImg from './bg'
 const container = ref(null)
 const fileInput = ref(null)
 const isRotating = ref(false)
-let scene, camera, renderer, cylinder, controls
+let scene, camera, renderer, cylinder, sphere, controls
 let excelData = ref([])
 let bgTexture = null
 let gridMeshes = [] // 存储所有网格的引用
+let cylinderRotationSpeed = 0.01
+let sphereRotationSpeed = 0.02
+const showTooltip = ref(false)
+const tooltipStyle = ref({
+  left: '0px',
+  top: '0px'
+})
+const currentRow = ref(0)
+const raycaster = new THREE.Raycaster()
+const mouse = new THREE.Vector2()
 
 // 触发文件选择
 const triggerFileSelect = () => {
@@ -223,7 +236,6 @@ const createTextTexture = (row, col) => {
 
 const toggleRotation = () => {
   isRotating.value = !isRotating.value
-  controls.autoRotate = isRotating.value
 }
 
 const lineCount = 32
@@ -259,8 +271,8 @@ const init = () => {
   // const height = 1400
   const geometry = new THREE.CylinderGeometry(radius, radius, height, 36, 5, true)
   const material = new THREE.MeshPhongMaterial({
-    color: 0xffee5c,
-    specular: 0x111111,
+    color: 0xffdd77,
+    specular: 0xeeeeee,
     shininess: 30,
     wireframe: false
   })
@@ -268,15 +280,16 @@ const init = () => {
   cylinder.position.set(0, 0, 0)
 
   // 创建红色球体
-  const sphereRadius = radius * 0.5
+  const sphereRadius = radius *1.01
   const sphereGeometry = new THREE.SphereGeometry(sphereRadius, 32, 32)
   const sphereMaterial = new THREE.MeshPhongMaterial({
     color: 0xff0000,
-    specular: 0x111111,
-    shininess: 30
+    specular: 0x448811,
+    shininess: 30,
+    emissive: 0xa20000,
+    emissiveIntensity: 0.2
   })
-  const sphere = new THREE.Mesh(sphereGeometry, sphereMaterial)
-  // 将球体放置在圆柱体顶部，球体中心点位于圆柱体顶部上方 sphereRadius 的距离
+  sphere = new THREE.Mesh(sphereGeometry, sphereMaterial)
   sphere.position.set(0, height / 2 + sphereRadius, 0)
   cylinder.add(sphere)
 
@@ -365,7 +378,7 @@ const init = () => {
   // 创建顶部和底部的圆形
   const circleGeometry = new THREE.CircleGeometry(radius, 32) // 使用相同的半径
   const circleMaterial = new THREE.MeshPhongMaterial({
-    color: 0xffee5c,
+    color: 0xffdd77,
     side: THREE.DoubleSide
   })
 
@@ -420,6 +433,12 @@ const init = () => {
 
 const animate = () => {
   requestAnimationFrame(animate)
+  
+  if (isRotating.value) {
+    cylinder.rotation.y += cylinderRotationSpeed
+    sphere.rotation.y += sphereRotationSpeed
+  }
+  
   controls.update()
   renderer.render(scene, camera)
 }
@@ -430,24 +449,56 @@ const handleResize = () => {
   renderer.setSize(window.innerWidth, window.innerHeight)
 }
 
+// 添加鼠标移动事件处理
+const onMouseMove = (event) => {
+  // 计算鼠标在归一化设备坐标中的位置
+  mouse.x = (event.clientX / window.innerWidth) * 2 - 1
+  mouse.y = -(event.clientY / window.innerHeight) * 2 + 1
+
+  // 更新射线
+  raycaster.setFromCamera(mouse, camera)
+
+  // 检查射线与网格的相交
+  const intersects = raycaster.intersectObjects(gridMeshes)
+
+  if (intersects.length > 0) {
+    const intersect = intersects[0]
+    const mesh = intersect.object
+    const row = Math.floor((mesh.position.y + height / 2) / (height / lineCount))
+    // console.log("🚀 -- onMouseMove -- row:", row)
+    
+    currentRow.value = row
+    showTooltip.value = true
+    
+    // 更新tooltip位置
+    tooltipStyle.value = {
+      left: `${event.clientX + 10}px`,
+      top: `${event.clientY + 10}px`
+    }
+  } else {
+    showTooltip.value = false
+  }
+}
+
 onMounted(async () => {
   try {
     await Promise.all([
-      loadBackgroundTexture() // 加载背景图片
+      loadBackgroundTexture()
     ])
   } catch (error) {
     console.error('初始化失败：', error)
   }
   window.addEventListener('resize', handleResize)
-  init() // 初始化3D场景
+  window.addEventListener('mousemove', onMouseMove)
+  init()
 })
 
 onBeforeUnmount(() => {
   window.removeEventListener('resize', handleResize)
+  window.removeEventListener('mousemove', onMouseMove)
   if (renderer) {
     renderer.dispose()
   }
-  // 清理网格资源
   gridMeshes.forEach(mesh => {
     mesh.geometry.dispose()
     mesh.material.dispose()
@@ -507,5 +558,17 @@ onBeforeUnmount(() => {
 
 .file-btn:active {
   background-color: #1565C0;
+}
+
+.tooltip {
+  position: fixed;
+  background-color: rgba(0, 0, 0, 0.8);
+  color: white;
+  padding: 8px 12px;
+  border-radius: 4px;
+  font-size: 14px;
+  pointer-events: none;
+  z-index: 1000;
+  transition: opacity 0.2s;
 }
 </style>

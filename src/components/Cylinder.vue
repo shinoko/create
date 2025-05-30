@@ -272,19 +272,19 @@ const init = () => {
   // const height = 1400
   const geometry = new THREE.CylinderGeometry(radius, radius, height, 36, 5, true)
   const material = new THREE.MeshPhongMaterial({
-    color: 0xffdd77,
-    specular: 0xeeeeee,
-    shininess: 30,
+    color: 0xfacd2e,
+    specular: 0xfff7b1,
+    shininess: 10,
     wireframe: false
   })
   cylinder = new THREE.Mesh(geometry, material)
   cylinder.position.set(0, 0, 0)
 
-  // 创建红色球体
+  // 创建球体
   const sphereRadius = radius *1.01
   const sphereGeometry = new THREE.SphereGeometry(sphereRadius, 32, 32)
   const sphereMaterial = new THREE.MeshPhongMaterial({
-    color: 0xE9E212,
+    color: 0xfacd2e,
     specular: 0xfff7b1,
     shininess: 30,
     emissive: 0xa20000,
@@ -382,7 +382,7 @@ const init = () => {
   // 创建顶部和底部的圆形
   const circleGeometry = new THREE.CircleGeometry(radius, 32) // 使用相同的半径
   const circleMaterial = new THREE.MeshPhongMaterial({
-    color: 0xffdd77,
+    color: 0xfacd2e,
     side: THREE.DoubleSide
   })
 

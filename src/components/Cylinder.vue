@@ -469,7 +469,7 @@ const onMouseMove = (event) => {
     
     // 确保行号在有效范围内
     if (row >= 0 && row < lineCount-TEXT_ARRAY.length) {
-      currentRow.value = row
+      currentRow.value = lineCount - TEXT_ARRAY.length - row - 1
       showTooltip.value = true
       
       // 更新tooltip位置

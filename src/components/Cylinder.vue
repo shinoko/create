@@ -284,8 +284,8 @@ const init = () => {
   const sphereRadius = radius *1.01
   const sphereGeometry = new THREE.SphereGeometry(sphereRadius, 32, 32)
   const sphereMaterial = new THREE.MeshPhongMaterial({
-    color: 0xff0000,
-    specular: 0x448811,
+    color: 0xE9E212,
+    specular: 0xfff7b1,
     shininess: 30,
     emissive: 0xa20000,
     emissiveIntensity: 0.2

@@ -12,6 +12,7 @@ import { ref, onMounted, onBeforeUnmount } from 'vue'
 import * as THREE from 'three'
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls'
 import * as XLSX from 'xlsx'
+import bgImg from './bg'
 
 const container = ref(null)
 const isRotating = ref(false)
@@ -70,7 +71,8 @@ const loadBackgroundTexture = () => {
   return new Promise((resolve, reject) => {
     const textureLoader = new THREE.TextureLoader()
     textureLoader.load(
-      '/bg.jpg',
+      // '/bg.jpg',
+      bgImg,
       (texture) => {
         bgTexture = texture
         resolve(texture)
@@ -370,11 +372,11 @@ onMounted(async () => {
       readExcelFile(), // 读取Excel文件
       loadBackgroundTexture() // 加载背景图片
     ])
-    init() // 初始化3D场景
-    window.addEventListener('resize', handleResize)
   } catch (error) {
     console.error('初始化失败：', error)
   }
+  window.addEventListener('resize', handleResize)
+  init() // 初始化3D场景
 })
 
 onBeforeUnmount(() => {

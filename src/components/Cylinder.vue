@@ -1,9 +1,21 @@
 <template>
   <div class="container">
     <div ref="container" class="cylinder-container"></div>
-    <button class="control-btn" @click="toggleRotation">
-      {{ isRotating ? '停止旋转' : '开始旋转' }}
-    </button>
+    <div class="button-group">
+      <button class="control-btn" @click="toggleRotation">
+        {{ isRotating ? '停止旋转' : '开始旋转' }}
+      </button>
+      <input
+        type="file"
+        ref="fileInput"
+        accept=".xlsx,.xls"
+        style="display: none"
+        @change="handleFileSelect"
+      />
+      <button class="control-btn file-btn" @click="triggerFileSelect">
+        选择Excel文件
+      </button>
+    </div>
   </div>
 </template>
 
@@ -15,16 +27,25 @@ import * as XLSX from 'xlsx'
 import bgImg from './bg'
 
 const container = ref(null)
+const fileInput = ref(null)
 const isRotating = ref(false)
 let scene, camera, renderer, cylinder, controls
 let excelData = ref([])
 let bgTexture = null
+let gridMeshes = [] // 存储所有网格的引用
 
-// 读取Excel文件
-const readExcelFile = async () => {
+// 触发文件选择
+const triggerFileSelect = () => {
+  fileInput.value.click()
+}
+
+// 处理文件选择
+const handleFileSelect = async (event) => {
+  const file = event.target.files[0]
+  if (!file) return
+
   try {
-    const response = await fetch('/data.xlsx')
-    const arrayBuffer = await response.arrayBuffer()
+    const arrayBuffer = await file.arrayBuffer()
     const workbook = XLSX.read(arrayBuffer, { type: 'array' })
     const firstSheetName = workbook.SheetNames[0]
     const worksheet = workbook.Sheets[firstSheetName]
@@ -43,8 +64,57 @@ const readExcelFile = async () => {
 
     excelData.value = formattedData
     console.log('Excel数据加载成功：', excelData.value)
+    
+    // 更新网格显示
+    updateGridTextures()
   } catch (error) {
     console.error('读取Excel文件失败：', error)
+  }
+}
+
+// 更新网格纹理
+const updateGridTextures = () => {
+  // 清除现有的网格
+  gridMeshes.forEach(mesh => {
+    cylinder.remove(mesh)
+    mesh.geometry.dispose()
+    mesh.material.dispose()
+  })
+  gridMeshes = []
+
+  // 重新创建网格
+  const gridSize = radius * 2 * Math.PI / 36
+  const gridHeight = height / lineCount
+  const gridMaterial = new THREE.MeshPhongMaterial({
+    color: 0xffffff,
+    transparent: true,
+    opacity: 0.8,
+    side: THREE.DoubleSide
+  })
+
+  for (let row = 0; row < lineCount; row++) {
+    const colsInRow = gridRows[row]
+
+    for (let col = 0; col < colsInRow; col++) {
+      const textTexture = createTextTexture(row, col)
+      if (textTexture) {
+        const gridGeometry = new THREE.PlaneGeometry(gridSize, gridHeight)
+        const gridMesh = new THREE.Mesh(gridGeometry, gridMaterial.clone())
+
+        const angle = ((col + (col + 1)) * Math.PI) / colsInRow
+        const x = radius * Math.cos(angle)
+        const z = radius * Math.sin(angle)
+        const y = -height / 2 + gridHeight / 2 + row * gridHeight
+        gridMesh.position.set(x, y, z)
+
+        gridMesh.lookAt(0, y, 0)
+        gridMesh.rotateY(Math.PI)
+
+        gridMesh.material.map = textTexture
+        cylinder.add(gridMesh)
+        gridMeshes.push(gridMesh)
+      }
+    }
   }
 }
 
@@ -264,11 +334,10 @@ const init = () => {
   })
 
   // 创建所有网格
-  const gridSize = radius * 2 * Math.PI / 36 // 网格宽度
-  const gridHeight = height / lineCount // 网格高度
+  const gridSize = radius * 2 * Math.PI / 36
+  const gridHeight = height / lineCount
 
   for (let row = 0; row < lineCount; row++) {
-
     const colsInRow = gridRows[row]
 
     for (let col = 0; col < colsInRow; col++) {
@@ -277,24 +346,19 @@ const init = () => {
         const gridGeometry = new THREE.PlaneGeometry(gridSize, gridHeight)
         const gridMesh = new THREE.Mesh(gridGeometry, gridMaterial.clone())
 
-        // 计算网格位置，稍微调整以避免与分割线重叠
-        //   const angle = (col * Math.PI * 2) / 36
         const angle = ((col + (col + 1)) * Math.PI) / colsInRow
         const x = radius * Math.cos(angle)
         const z = radius * Math.sin(angle)
         const y = -height / 2 + gridHeight / 2 + row * gridHeight
         gridMesh.position.set(x, y, z)
 
-        // 使网格面向圆柱体中心，然后旋转使其背对中轴线
         gridMesh.lookAt(0, y, 0)
         gridMesh.rotateY(Math.PI)
 
-        // 应用文字贴图
         gridMesh.material.map = textTexture
-
         cylinder.add(gridMesh)
+        gridMeshes.push(gridMesh)
       }
-
     }
   }
 
@@ -369,7 +433,6 @@ const handleResize = () => {
 onMounted(async () => {
   try {
     await Promise.all([
-      readExcelFile(), // 读取Excel文件
       loadBackgroundTexture() // 加载背景图片
     ])
   } catch (error) {
@@ -384,6 +447,11 @@ onBeforeUnmount(() => {
   if (renderer) {
     renderer.dispose()
   }
+  // 清理网格资源
+  gridMeshes.forEach(mesh => {
+    mesh.geometry.dispose()
+    mesh.material.dispose()
+  })
 })
 </script>
 
@@ -400,10 +468,17 @@ onBeforeUnmount(() => {
   overflow: hidden;
 }
 
-.control-btn {
+.button-group {
   position: absolute;
   top: 20px;
   right: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  z-index: 1000;
+}
+
+.control-btn {
   padding: 10px 20px;
   font-size: 16px;
   background-color: #4CAF50;
@@ -412,7 +487,6 @@ onBeforeUnmount(() => {
   border-radius: 4px;
   cursor: pointer;
   transition: background-color 0.3s;
-  z-index: 1000;
 }
 
 .control-btn:hover {
@@ -421,5 +495,17 @@ onBeforeUnmount(() => {
 
 .control-btn:active {
   background-color: #3d8b40;
+}
+
+.file-btn {
+  background-color: #2196F3;
+}
+
+.file-btn:hover {
+  background-color: #1976D2;
+}
+
+.file-btn:active {
+  background-color: #1565C0;
 }
 </style>

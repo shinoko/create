@@ -28,6 +28,7 @@ import * as THREE from 'three'
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls'
 import * as XLSX from 'xlsx'
 import bgImg from './bg'
+import highlight from './highlight'
 
 const container = ref(null)
 const fileInput = ref(null)
@@ -289,8 +290,11 @@ const init = () => {
     emissive: 0xa20000,
     emissiveIntensity: 0.2
   })
+  
   sphere = new THREE.Mesh(sphereGeometry, sphereMaterial)
-  sphere.position.set(0, height / 2 + sphereRadius, 0)
+  // 调整球体位置，使其与圆柱体分开
+  const sphereOffset = radius * 0.2 // 设置偏移距离
+  sphere.position.set(0, height / 2 + sphereRadius + sphereOffset, 0)
   cylinder.add(sphere)
 
   // 创建自定义网格线

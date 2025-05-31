@@ -198,27 +198,30 @@ const createTextTexture = (row, col) => {
   const isLarge = lineCount - row - 1 < TEXT_ARRAY.length
   
   // 如果有背景图片，先绘制背景
-  if (!isLarge && bgTexture) {
-    const img = bgTexture.image
-    // 计算网格大小
-    const gridSize = radius * 2 * Math.PI / 80
-    const gridHeight = height / lineCount
+  // if (!isLarge && bgTexture) {
+  //   const img = bgTexture.image
+  //   // 计算网格大小
+  //   const gridSize = radius * 2 * Math.PI / 80
+  //   const gridHeight = height / lineCount
 
-    // 设置绘制尺寸为网格大小
-    let drawWidth = gridSize
-    let drawHeight = gridHeight
+  //   // 设置绘制尺寸为网格大小
+  //   let drawWidth = gridSize
+  //   let drawHeight = gridHeight
 
-    // 计算偏移量使图片居中
-    let offsetX = (canvas.width - drawWidth) / 2
-    let offsetY = (canvas.height - drawHeight) / 2
+  //   // 计算偏移量使图片居中
+  //   let offsetX = (canvas.width - drawWidth) / 2
+  //   let offsetY = (canvas.height - drawHeight) / 2
     
-    // 绘制背景图片，确保填满整个画布
-    context.drawImage(img, offsetX, offsetY, drawWidth, drawHeight)
-  } else {
-    // 如果没有背景图片，使用透明背景
-    context.fillStyle = 'rgba(0, 0, 0, 0)'
-    context.fillRect(0, 0, canvas.width, canvas.height)
-  }
+  //   // 绘制背景图片，确保填满整个画布
+  //   context.drawImage(img, offsetX, offsetY, drawWidth, drawHeight)
+  // } else {
+  //   // 如果没有背景图片，使用透明背景
+  //   context.fillStyle = 'rgba(0, 0, 0, 0)'
+  //   context.fillRect(0, 0, canvas.width, canvas.height)
+  // }
+
+  context.fillStyle = 'rgba(0, 0, 0, 0)'
+  context.fillRect(0, 0, canvas.width, canvas.height)
   
   // 设置文字样式
   const fontSize = isLarge ? 60 : 30

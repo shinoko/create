@@ -37,8 +37,8 @@ let scene, camera, renderer, cylinder, sphere, controls
 let excelData = ref([])
 let bgTexture = null
 let gridMeshes = [] // 存储所有网格的引用
-let cylinderRotationSpeed = 0.01
-let sphereRotationSpeed = 0.02
+let cylinderRotationSpeed = -0.01
+let sphereRotationSpeed = -0.02
 const showTooltip = ref(false)
 const tooltipStyle = ref({
   left: '0px',
@@ -192,7 +192,6 @@ const createTextTexture = (row, col) => {
 
   const canvas = document.createElement('canvas')
   canvas.width = 256
-  // canvas.height = 256
   canvas.height = height/lineCount
   const context = canvas.getContext('2d')
 
@@ -221,14 +220,24 @@ const createTextTexture = (row, col) => {
     context.fillRect(0, 0, canvas.width, canvas.height)
   }
   
-  
   // 设置文字样式
-  context.font = isLarge ? 'bold 60px Arial' : 'bold 30px Arial'
+  const fontSize = isLarge ? 60 : 30
+  context.font = `bold ${fontSize}px Arial`
   context.fillStyle = 'black'
   context.textAlign = 'center'
   context.textBaseline = 'middle'
-  
-  context.fillText(text, canvas.width / 2, canvas.height / 2)
+
+  // 处理换行符
+  const lines = text.toString().split('\n')
+  const lineHeight = fontSize * 1.2 // 行高为字体大小的1.2倍
+  const totalHeight = lines.length * lineHeight
+  const startY = (canvas.height - totalHeight) / 2 + fontSize / 2 // 从顶部开始绘制，考虑行高
+
+  // 绘制每一行文字
+  lines.forEach((line, index) => {
+    const y = startY + index * lineHeight
+    context.fillText(line, canvas.width / 2, y)
+  })
   
   const texture = new THREE.CanvasTexture(canvas)
   texture.needsUpdate = true

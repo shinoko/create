@@ -414,7 +414,7 @@ const init = async() => {
   scene.add(directionalLight)
 
   // 添加所有对象到场景
-  scene.add(cylinder)
+  // scene.add(cylinder)
   scene.add(topCircle)
   scene.add(bottomCircle)
 
@@ -442,20 +442,69 @@ const init = async() => {
   controls.maxPolarAngle = Math.PI // 限制垂直旋转角度
   controls.minPolarAngle = 0 // 限制垂直旋转角度
 
+  // 创建第一组（左侧）
+  const leftOffset = -radius * 2.5 // 左侧偏移量
+  cylinder.position.set(leftOffset, 0, 0)
+  scene.add(cylinder)
+
+  // 创建第二组（右侧）
+  const rightCylinder = cylinder.clone()
+  rightCylinder.position.set(-leftOffset, 0, 0) // 右侧偏移量
+  scene.add(rightCylinder)
+
+  // 创建右侧球体
+  const rightSphere = sphere.clone()
+  rightSphere.position.set(0, height / 2 + sphereRadius + sphereOffset, 0)
+  rightCylinder.add(rightSphere)
+
+  // 调整相机位置以适应两个物体
+  camera.position.set(5500, 1200, 400)
+  camera.lookAt(0, 0, 0)
+
+  // 调整控制器
+  controls.target.set(0, 0, 0)
+  controls.minDistance = 1800
+  controls.maxDistance = 8000 // 增加最大距离以适应两个物体
+
+  // 创建左侧圆柱体的顶面和底面
+  const leftTopCircle = topCircle.clone()
+  leftTopCircle.position.set(leftOffset, height / 2, 0)
+  scene.add(leftTopCircle)
+
+  const leftBottomCircle = bottomCircle.clone()
+  leftBottomCircle.position.set(leftOffset, -height / 2, 0)
+  scene.add(leftBottomCircle)
+
+  // 创建右侧圆柱体的顶面和底面
+  const rightTopCircle = topCircle.clone()
+  rightTopCircle.position.set(-leftOffset, height / 2, 0)
+  scene.add(rightTopCircle)
+
+  const rightBottomCircle = bottomCircle.clone()
+  rightBottomCircle.position.set(-leftOffset, -height / 2, 0)
+  scene.add(rightBottomCircle)
+
+  // 移除原来的顶面和底面
+  scene.remove(topCircle)
+  scene.remove(bottomCircle)
+
+  // 修改动画函数以处理两个物体的旋转
+  const animate = () => {
+    requestAnimationFrame(animate)
+    
+    if (isRotating.value) {
+      cylinder.rotation.y += cylinderRotationSpeed
+      sphere.rotation.y += sphereRotationSpeed
+      rightCylinder.rotation.y += cylinderRotationSpeed
+      rightSphere.rotation.y += sphereRotationSpeed
+    }
+    
+    controls.update()
+    renderer.render(scene, camera)
+  }
+
   // 开始动画循环
   animate()
-}
-
-const animate = () => {
-  requestAnimationFrame(animate)
-  
-  if (isRotating.value) {
-    cylinder.rotation.y += cylinderRotationSpeed
-    sphere.rotation.y += sphereRotationSpeed
-  }
-  
-  controls.update()
-  renderer.render(scene, camera)
 }
 
 const handleResize = () => {

@@ -1,5 +1,6 @@
 <template>
   <div class="container">
+    <div class="title">上太极八卦信息双螺旋祈福宫</div>
     <div ref="container" class="cylinder-container"></div>
     <div class="button-group">
       <button class="control-btn" @click="toggleRotation">
@@ -268,7 +269,7 @@ const init = async() => {
     0.1,
     12800
   )
-  camera.position.set(3500, 1500, 500)
+  camera.position.set(5500, 1200, 400) // 调整相机位置
   camera.lookAt(0, 0, 0)
 
   // 创建渲染器
@@ -530,6 +531,21 @@ onBeforeUnmount(() => {
   position: relative;
   width: 100%;
   height: 100vh;
+}
+
+.title {
+  position: absolute;
+  top: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 24px;
+  font-weight: bold;
+  color: #333;
+  z-index: 1000;
+  text-shadow: 0 0 10px rgba(255, 255, 255, 0.8);
+  background-color: rgba(255, 255, 255, 0.7);
+  padding: 10px 20px;
+  border-radius: 4px;
 }
 
 .cylinder-container {

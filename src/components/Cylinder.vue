@@ -28,7 +28,7 @@ import * as THREE from 'three'
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls'
 import * as XLSX from 'xlsx'
 import bgImg from './bg'
-import highlight from './highlight'
+import light from './light'
 
 const container = ref(null)
 const fileInput = ref(null)
@@ -80,14 +80,14 @@ const handleFileSelect = async (event) => {
     console.log('Excel数据加载成功：', excelData.value)
     
     // 更新网格显示
-    updateGridTextures()
+    await updateGridTextures()
   } catch (error) {
     console.error('读取Excel文件失败：', error)
   }
 }
 
 // 更新网格纹理
-const updateGridTextures = () => {
+const updateGridTextures = async () => {
   // 清除现有的网格
   gridMeshes.forEach(mesh => {
     cylinder.remove(mesh)
@@ -110,7 +110,7 @@ const updateGridTextures = () => {
     const colsInRow = gridRows[row]
 
     for (let col = 0; col < colsInRow; col++) {
-      const textTexture = createTextTexture(row, col)
+      const textTexture = await createTextTexture(row, col)
       if (textTexture) {
         const gridGeometry = new THREE.PlaneGeometry(gridSize, gridHeight)
         const gridMesh = new THREE.Mesh(gridGeometry, gridMaterial.clone())
@@ -171,7 +171,7 @@ const loadBackgroundTexture = () => {
 }
 
 // 创建文字贴图
-const createTextTexture = (row, col) => {
+const createTextTexture = async (row, col) => {
   let text = ''
   if (lineCount - row - 1 < TEXT_ARRAY.length) {
     const itemArray = TEXT_ARRAY[lineCount - row - 1]
@@ -188,6 +188,8 @@ const createTextTexture = (row, col) => {
     }
   }
 
+    console.log("🚀 -- createTextTexture -- text:", text)
+
   if (!text) return null
 
   const canvas = document.createElement('canvas')
@@ -196,33 +198,10 @@ const createTextTexture = (row, col) => {
   const context = canvas.getContext('2d')
 
   const isLarge = lineCount - row - 1 < TEXT_ARRAY.length
-  
-  // 如果有背景图片，先绘制背景
-  // if (!isLarge && bgTexture) {
-  //   const img = bgTexture.image
-  //   // 计算网格大小
-  //   const gridSize = radius * 2 * Math.PI / 80
-  //   const gridHeight = height / lineCount
-
-  //   // 设置绘制尺寸为网格大小
-  //   let drawWidth = gridSize
-  //   let drawHeight = gridHeight
-
-  //   // 计算偏移量使图片居中
-  //   let offsetX = (canvas.width - drawWidth) / 2
-  //   let offsetY = (canvas.height - drawHeight) / 2
-    
-  //   // 绘制背景图片，确保填满整个画布
-  //   context.drawImage(img, offsetX, offsetY, drawWidth, drawHeight)
-  // } else {
-  //   // 如果没有背景图片，使用透明背景
-  //   context.fillStyle = 'rgba(0, 0, 0, 0)'
-  //   context.fillRect(0, 0, canvas.width, canvas.height)
-  // }
 
   context.fillStyle = 'rgba(0, 0, 0, 0)'
   context.fillRect(0, 0, canvas.width, canvas.height)
-  
+
   // 设置文字样式
   const fontSize = isLarge ? 60 : 30
   context.font = `bold ${fontSize}px Arial`
@@ -230,22 +209,41 @@ const createTextTexture = (row, col) => {
   context.textAlign = 'center'
   context.textBaseline = 'middle'
 
-  // 处理换行符
+  // 添加小图片
+  if (!isLarge) { // 只在非大字体区域添加图片
+    const imgHeight = fontSize * 1.2
+    const imgWidth = imgHeight * 2 / 3
+    const imgX = (canvas.width - imgWidth) / 2 // 水平居中
+    const imgY = 10 // 距离顶部10像素
+
+    // 加载图片
+    const img = new Image()
+    img.src = light
+    await new Promise((resolve) => {
+      img.onload = () => {
+        context.drawImage(img, imgX, imgY, imgWidth, imgHeight)
+        resolve()
+      }
+    })
+  }
+
+  // 调整文字位置，为图片留出空间
   const lines = text.toString().split('\n')
-  const lineHeight = fontSize * 1.2 // 行高为字体大小的1.2倍
+  const lineHeight = fontSize * 1.2
   const totalHeight = lines.length * lineHeight
-  const startY = (canvas.height - totalHeight) / 2 + fontSize / 2 // 从顶部开始绘制，考虑行高
+  const startY = (canvas.height - totalHeight) / 2 + fontSize / 2 + (isLarge ? 0 : fontSize) // 非大字体区域向下偏移
 
   // 绘制每一行文字
   lines.forEach((line, index) => {
     const y = startY + index * lineHeight
     context.fillText(line, canvas.width / 2, y)
   })
-  
+
   const texture = new THREE.CanvasTexture(canvas)
   texture.needsUpdate = true
   return texture
 }
+
 
 const toggleRotation = () => {
   isRotating.value = !isRotating.value
@@ -259,7 +257,7 @@ const columnCount = 64
 const gridRows = Array(lineCount - TEXT_ARRAY.length).fill(columnCount).concat(lengthArray) // 每行的网格数量
 
 
-const init = () => {
+const init = async() => {
   // 创建场景
   scene = new THREE.Scene()
 
@@ -370,7 +368,7 @@ const init = () => {
     const colsInRow = gridRows[row]
 
     for (let col = 0; col < colsInRow; col++) {
-      const textTexture = createTextTexture(row, col)
+      const textTexture = await createTextTexture(row, col)
       if (textTexture) {
         const gridGeometry = new THREE.PlaneGeometry(gridSize, gridHeight)
         const gridMesh = new THREE.Mesh(gridGeometry, gridMaterial.clone())
@@ -502,16 +500,16 @@ const onMouseMove = (event) => {
 }
 
 onMounted(async () => {
-  try {
-    await Promise.all([
-      loadBackgroundTexture()
-    ])
-  } catch (error) {
-    console.error('初始化失败：', error)
-  }
+  // try {
+  //   await Promise.all([
+  //     loadBackgroundTexture()
+  //   ])
+  // } catch (error) {
+  //   console.error('初始化失败：', error)
+  // }
   window.addEventListener('resize', handleResize)
   window.addEventListener('mousemove', onMouseMove)
-  init()
+  await init()
 })
 
 onBeforeUnmount(() => {
